@@ -7,12 +7,17 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import connectDB from './config/db';
 import alertRoutes from './routes/alertRoutes';
+import redditAlertRoutes from './routes/redditAlertRoutes';
+import { startRedditPoller } from './services/redditService';
 
 // ─── Express App ────────────────────────────────────────────────────────────
 
 // ─── Database ───────────────────────────────────────────────────────────────
 
-connectDB();
+connectDB().then(() => {
+    // Start the Reddit poller only after DB is ready so saves don't fail
+    startRedditPoller(io);
+});
 
 const app = express();
 
@@ -58,6 +63,7 @@ app.get('/', (_req, res) => {
 });
 
 app.use('/api/alerts', alertRoutes);
+app.use('/api/reddit-alerts', redditAlertRoutes);
 
 // ─── Start Listening ────────────────────────────────────────────────────────
 
