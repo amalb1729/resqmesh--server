@@ -4,6 +4,21 @@ import RedditAlert from '../models/RedditAlert';
 const router = Router();
 
 /**
+ * Recompute relative time from a Unix-ms timestamp so it's always fresh.
+ * The stored `time` field is a snapshot from ingest and goes stale quickly.
+ */
+function timeAgo(createdAtMs: number): string {
+    const diffMs  = Date.now() - createdAtMs;
+    const minutes = Math.floor(diffMs / 60_000);
+    if (minutes < 1)    return 'just now';
+    if (minutes < 60)   return `${minutes} min ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24)     return `${hours} hr ago`;
+    const days = Math.floor(hours / 24);
+    return `${days} day${days > 1 ? 's' : ''} ago`;
+}
+
+/**
  * GET /api/reddit-alerts
  * Returns the 50 most recent Reddit alerts from DB.
  * Called by the dashboard on Socket.IO connect to hydrate historical posts
@@ -23,7 +38,7 @@ router.get('/', async (_req: Request, res: Response) => {
             source:        'social' as const,
             sourceDetails: a.sourceDetails,
             title:         a.title,
-            time:          a.time,
+            time:          timeAgo(a.createdAt),   // recompute — never use stale stored string
             location:      a.location,
             lat:           a.lat,
             lng:           a.lng,
