@@ -28,6 +28,7 @@ app.use(cors({ origin: '*' }));
 
 app.use(express.json());
 
+
 // ─── HTTP Server ────────────────────────────────────────────────────────────
 
 const httpServer = createServer(app);
@@ -51,6 +52,13 @@ io.on('connection', (socket) => {
 });
 
 // ─── Routes ─────────────────────────────────────────────────────────────────
+
+app.use((req, _res, next) => {
+    if (req.body && Object.keys(req.body).length > 0) {
+        console.log(`[BODY]`, req.body);
+    }
+    next();
+});
 
 app.get('/', (_req, res) => {
     res.json({ status: 'ResQMesh server is running 🚀' });
